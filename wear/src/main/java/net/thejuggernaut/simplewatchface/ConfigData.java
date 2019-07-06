@@ -30,20 +30,29 @@ public class ConfigData {
         // Data for highlight/marker (second hand) color UX in settings Activity.
         ConfigItemType markerColorConfigItem =
                 new ColorConfigItem(
-                        context.getString(R.string.config_marker_color_label),
+                        "Time colour",
                         R.drawable.icn_styles,
-                        context.getString(R.string.saved_marker_color)
+                        "TIME"
                         );
         settingsConfigData.add(markerColorConfigItem);
 
         // Data for Background color UX in settings Activity.
         ConfigItemType backgroundColorConfigItem =
                 new ColorConfigItem(
-                        context.getString(R.string.config_background_color_label),
+                        "Date colour",
                         R.drawable.icn_styles,
-                        context.getString(R.string.saved_background_color)
-                        );
+                       "DATE"
+                );
         settingsConfigData.add(backgroundColorConfigItem);
+
+        // Data for Background color UX in settings Activity.
+        ConfigItemType batteryColorConfigItem =
+                new ColorConfigItem(
+                        "Battery colour",
+                        R.drawable.icn_styles,
+                        "BATTERY"
+                );
+        settingsConfigData.add(batteryColorConfigItem);
 
 
         return settingsConfigData;

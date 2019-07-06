@@ -1,7 +1,9 @@
 package net.thejuggernaut.simplewatchface;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -13,18 +15,24 @@ public class MySettings extends Activity {
 
     private static final String TAG = "Settings thing";
 
-    static final int COMPLICATION_CONFIG_REQUEST_CODE = 1001;
-    static final int UPDATE_COLORS_CONFIG_REQUEST_CODE = 1002;
+
+    static final int TIME_COLOURS = 205;
+    static final int DATE_COLOURS = 206;
+    static final int BATTERY_COLOURS = 207;
 
     private WearableRecyclerView mWearableRecyclerView;
     private RecycleView mAdapter;
+    SharedPreferences mSharedPref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
 
-
+        mSharedPref =
+                this.getSharedPreferences(
+                        this.getString(R.string.settings_key),
+                        Context.MODE_PRIVATE);
 
         setContentView(R.layout.mysettings);
 
@@ -34,7 +42,7 @@ public class MySettings extends Activity {
                 ConfigData.getDataToPopulateAdapter(this));
 
         mWearableRecyclerView =
-                (WearableRecyclerView) findViewById(R.id.wearable_recycler_view);
+                findViewById(R.id.wearable_recycler_view);
 
         // Aligns the first and last items on the list vertically centered on the screen.
         mWearableRecyclerView.setEdgeItemsCenteringEnabled(true);
@@ -50,9 +58,27 @@ public class MySettings extends Activity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        System.out.println("Result code.. "+resultCode);
-        int pickedColor =  ColorPickActivity.Companion.getPickedColor(data);
-        System.out.println("Value is "+pickedColor);
+        int pickedColor;
+        switch(requestCode){
+            case TIME_COLOURS:
+                pickedColor =  ColorPickActivity.Companion.getPickedColor(data);
+                mSharedPref.edit().putInt("timecolour",pickedColor);
+                break;
+
+            case DATE_COLOURS:
+                pickedColor =  ColorPickActivity.Companion.getPickedColor(data);
+                mSharedPref.edit().putInt("datecolour",pickedColor);
+                break;
+
+            case BATTERY_COLOURS:
+                pickedColor =  ColorPickActivity.Companion.getPickedColor(data);
+                mSharedPref.edit().putInt("batterycolour",pickedColor);
+                break;
+        }
+
+
+
+
 
     }
 }

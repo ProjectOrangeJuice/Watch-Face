@@ -123,7 +123,7 @@ public class RecycleView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         public ColorPickerViewHolder(View view) {
             super(view);
 
-            mAppearanceButton = (Button) view.findViewById(R.id.color_picker_button);
+            mAppearanceButton = view.findViewById(R.id.color_picker_button);
             view.setOnClickListener(this);
         }
 
@@ -142,7 +142,7 @@ public class RecycleView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         }
 
 
-        @Override
+            @Override
         public void onClick(View view) {
             int position = getAdapterPosition();
             Log.d(TAG, "Complication onClick() position: " + position);
@@ -186,14 +186,28 @@ public class RecycleView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
 
 
-
+          Log.d(TAG,"shared pref is.."+mSharedPrefResourceString);
             Intent intent = new ColorPickActivity.IntentBuilder()
                     .oldColor(Color.WHITE)
                     .colors(myColours)
                     .build(mContext);
+
             Activity activity = (Activity) view.getContext();
-            activity.startActivityForResult(
-                    intent, 51);
+
+            switch (mSharedPrefResourceString){
+                case "TIME":
+                    activity.startActivityForResult(
+                            intent, MySettings.TIME_COLOURS);
+                    break;
+                case "DATE":
+                    activity.startActivityForResult(
+                            intent, MySettings.DATE_COLOURS);
+                    break;
+                case "BATTERY":
+                    activity.startActivityForResult(
+                            intent, MySettings.BATTERY_COLOURS);
+                    break;
+                }
 
 
 
