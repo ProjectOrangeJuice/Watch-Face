@@ -4,38 +4,27 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.Typeface;
+import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-
-import androidx.core.content.ContextCompat;
-
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
-
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.wearable.DataApi;
-import com.google.android.gms.wearable.DataEvent;
-import com.google.android.gms.wearable.DataEventBuffer;
-import com.google.android.gms.wearable.DataItem;
-import com.google.android.gms.wearable.DataItemBuffer;
-import com.google.android.gms.wearable.DataMap;
-import com.google.android.gms.wearable.DataMapItem;
-import com.google.android.gms.wearable.Wearable;
+import androidx.core.content.ContextCompat;
 
 import java.lang.ref.WeakReference;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.Calendar;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -52,6 +41,8 @@ import java.util.concurrent.TimeUnit;
  * https://codelabs.developers.google.com/codelabs/watchface/index.html#0
  */
 public class MyWatchFace extends CanvasWatchFaceService {
+    SharedPreferences mSharedPref;
+    public int batteryLevel = 0;
     private static final Typeface NORMAL_TYPEFACE =
             Typeface.create(Typeface.SANS_SERIF, Typeface.NORMAL);
 
@@ -68,7 +59,13 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
     @Override
     public Engine onCreateEngine() {
+
+        mSharedPref =
+                this.getSharedPreferences(
+                        this.getString(R.string.settings_key),
+                        Context.MODE_PRIVATE);
         return new Engine();
+
     }
 
     private static class EngineHandler extends Handler {
@@ -91,10 +88,9 @@ public class MyWatchFace extends CanvasWatchFaceService {
         }
     }
 
-    private class Engine extends CanvasWatchFaceService.Engine implements
-            GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+    private class Engine extends CanvasWatchFaceService.Engine {
         String TAG = "HelloWatch ";
-        private GoogleApiClient googleApiClient;
+
         private final Handler mUpdateTimeHandler = new EngineHandler(this);
         private Calendar mCalendar;
         private final BroadcastReceiver mTimeZoneReceiver = new BroadcastReceiver() {
@@ -109,6 +105,14 @@ public class MyWatchFace extends CanvasWatchFaceService {
         private float mYOffset;
         private Paint mBackgroundPaint;
         private Paint mTextPaint;
+        private Paint dateTextPaint;
+        private Paint batteryTextPaint;
+
+
+        private Paint mTextPaintOff;
+        private Paint otherTextPaintOff;
+
+
         /**
          * Whether the display supports fewer bits for each color in ambient mode. When true, we
          * disable anti-aliasing in ambient mode.
@@ -121,11 +125,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
         public void onCreate(SurfaceHolder holder) {
             super.onCreate(holder);
 
-            googleApiClient = new GoogleApiClient.Builder(MyWatchFace.this)
-                    .addApi(Wearable.API)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .build();
+
 
             setWatchFaceStyle(new WatchFaceStyle.Builder(MyWatchFace.this)
                     .build());
@@ -145,14 +145,45 @@ public class MyWatchFace extends CanvasWatchFaceService {
             mTextPaint = new Paint();
             mTextPaint.setTypeface(NORMAL_TYPEFACE);
             mTextPaint.setAntiAlias(true);
-            mTextPaint.setColor(
-                    ContextCompat.getColor(getApplicationContext(), R.color.digital_text));
+            mTextPaint.setColor(mSharedPref.getInt("timecolour",Color.WHITE));
+
+            dateTextPaint = new Paint();
+            dateTextPaint.setTypeface(NORMAL_TYPEFACE);
+            dateTextPaint.setAntiAlias(true);
+            dateTextPaint.setColor(mSharedPref.getInt("datecolour",Color.WHITE));
+
+            batteryTextPaint = new Paint();
+            batteryTextPaint.setTypeface(NORMAL_TYPEFACE);
+            batteryTextPaint.setAntiAlias(true);
+            batteryTextPaint.setColor(mSharedPref.getInt("batterycolour",Color.WHITE));
+
+
+            mTextPaintOff = new Paint();
+            mTextPaintOff.setTypeface(NORMAL_TYPEFACE);
+            mTextPaintOff.setAntiAlias(true);
+            mTextPaintOff.setColor(
+                    ContextCompat.getColor(getApplicationContext(),  R.color.white));
+
+            otherTextPaintOff = new Paint();
+            otherTextPaintOff.setTypeface(NORMAL_TYPEFACE);
+            otherTextPaintOff.setAntiAlias(true);
+            otherTextPaintOff.setColor(
+                    ContextCompat.getColor(getApplicationContext(),  R.color.white));
+
         }
+
+        private final BroadcastReceiver batteryWork = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                batteryLevel = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+
+            }
+        };
 
         @Override
         public void onDestroy() {
             mUpdateTimeHandler.removeMessages(MSG_UPDATE_TIME);
-            releaseGoogleApiClient();
+
             super.onDestroy();
         }
 
@@ -162,13 +193,13 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
             if (visible) {
                 registerReceiver();
-                googleApiClient.connect();
+
                 // Update time zone in case it changed while we weren't visible.
                 mCalendar.setTimeZone(TimeZone.getDefault());
                 invalidate();
             } else {
                 unregisterReceiver();
-                releaseGoogleApiClient();
+
             }
 
             // Whether the timer should be running depends on whether we're visible (as well as
@@ -176,73 +207,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             updateTimer();
         }
 
-        private void releaseGoogleApiClient() {
-            if (googleApiClient != null && googleApiClient.isConnected()) {
-                Wearable.DataApi.removeListener(googleApiClient, onDataChangedListener);
-                googleApiClient.disconnect();
-            }
-        }
 
-        @Override
-        public void onConnected(Bundle bundle) {
-            Log.d(TAG, "connected GoogleAPI");
-            Wearable.DataApi.addListener(googleApiClient, onDataChangedListener);
-            Wearable.DataApi.getDataItems(googleApiClient).setResultCallback(onConnectedResultCallback);
-        }
-
-        private final DataApi.DataListener onDataChangedListener = new DataApi.DataListener() {
-            @Override
-            public void onDataChanged(DataEventBuffer dataEvents) {
-                for (DataEvent event : dataEvents) {
-                    if (event.getType() == DataEvent.TYPE_CHANGED) {
-                        DataItem item = event.getDataItem();
-                        processConfigurationFor(item);
-                    }
-                }
-
-                dataEvents.release();
-                //invalidateIfNecessary();
-            }
-        };
-
-        private void processConfigurationFor(DataItem item) {
-            if ("/simple_watch_face_config".equals(item.getUri().getPath())) {
-                DataMap dataMap = DataMapItem.fromDataItem(item).getDataMap();
-                if (dataMap.containsKey("KEY_BACKGROUND_COLOUR")) {
-                    String backgroundColour = dataMap.getString("KEY_BACKGROUND_COLOUR");
-                    Log.d(TAG,"Background.. "+backgroundColour);
-                    //watchFace.updateBackgroundColourTo(Color.parseColor(backgroundColour));
-                }
-
-                if (dataMap.containsKey("KEY_DATE_TIME_COLOUR")) {
-                    String timeColour = dataMap.getString("KEY_DATE_TIME_COLOUR");
-                    //watchFace.updateDateAndTimeColourTo(Color.parseColor(timeColour));
-                }
-            }
-        }
-
-        private final ResultCallback<DataItemBuffer> onConnectedResultCallback = new ResultCallback<DataItemBuffer>() {
-            @Override
-            public void onResult(DataItemBuffer dataItems) {
-                for (DataItem item : dataItems) {
-                    processConfigurationFor(item);
-                }
-
-                dataItems.release();
-              //  invalidateIfNecessary();
-            }
-        };
-
-
-        @Override
-        public void onConnectionSuspended(int i) {
-            Log.e(TAG, "suspended GoogleAPI");
-        }
-
-        @Override
-        public void onConnectionFailed(ConnectionResult connectionResult) {
-            Log.e(TAG, "connectionFailed GoogleAPI");
-        }
 
         private void registerReceiver() {
             if (mRegisteredTimeZoneReceiver) {
@@ -251,6 +216,11 @@ public class MyWatchFace extends CanvasWatchFaceService {
             mRegisteredTimeZoneReceiver = true;
             IntentFilter filter = new IntentFilter(Intent.ACTION_TIMEZONE_CHANGED);
             MyWatchFace.this.registerReceiver(mTimeZoneReceiver, filter);
+
+            IntentFilter filter1 = new IntentFilter(Intent.ACTION_BATTERY_CHANGED);
+
+            MyWatchFace.this.registerReceiver(batteryWork, filter1);
+
         }
 
         private void unregisterReceiver() {
@@ -259,6 +229,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
             }
             mRegisteredTimeZoneReceiver = false;
             MyWatchFace.this.unregisterReceiver(mTimeZoneReceiver);
+
+            MyWatchFace.this.unregisterReceiver(batteryWork);
         }
 
         @Override
@@ -274,6 +246,10 @@ public class MyWatchFace extends CanvasWatchFaceService {
                     ? R.dimen.digital_text_size_round : R.dimen.digital_text_size);
 
             mTextPaint.setTextSize(textSize);
+            dateTextPaint.setTextSize(textSize/2);
+            batteryTextPaint.setTextSize(textSize/2);
+            mTextPaintOff.setTextSize(textSize);
+            otherTextPaintOff.setTextSize(textSize/2);
         }
 
         @Override
@@ -312,16 +288,39 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 canvas.drawRect(0, 0, bounds.width(), bounds.height(), mBackgroundPaint);
             }
 
+
+
             // Draw H:MM in ambient mode or H:MM:SS in interactive mode.
             long now = System.currentTimeMillis();
             mCalendar.setTimeInMillis(now);
+            int hour = mCalendar.get(Calendar.HOUR);
+            int min = mCalendar.get(Calendar.MINUTE);
+            int half = mCalendar.get(Calendar.AM_PM);
+            NumberFormat f = new DecimalFormat("00");
+            int month = mCalendar.get(Calendar.DAY_OF_MONTH);
 
-            String text = mAmbient
+            if (half == Calendar.PM && hour == 0) {
+                hour = 12;
+            }
+            String halfText = (half == Calendar.AM) ? "AM" : "PM";
+            String text = String.format("%d:%02d %s", hour, min, halfText);
+            String date = String.format("%s-%02d-%02d", f.format(month),
+                    mCalendar.get(Calendar.MONTH), mCalendar.get(Calendar.YEAR));
+           /* String text = mAmbient
                     ? String.format("%d:%02d", mCalendar.get(Calendar.HOUR),
                     mCalendar.get(Calendar.MINUTE))
-                    : String.format("%d:%02d:%02d", mCalendar.get(Calendar.HOUR),
-                    mCalendar.get(Calendar.MINUTE), mCalendar.get(Calendar.SECOND));
-            canvas.drawText(text, mXOffset, mYOffset, mTextPaint);
+                    : String.format("%d:%02d", mCalendar.get(Calendar.HOUR),
+                    mCalendar.get(Calendar.MINUTE));*/
+            if(!mAmbient) {
+                canvas.drawText(text, mXOffset, mYOffset, mTextPaint);
+                canvas.drawText(date, mXOffset + 30, mYOffset + 40, dateTextPaint);
+                String battery = batteryLevel + "%";
+                canvas.drawText(battery, mXOffset + 30, mYOffset + 80, batteryTextPaint);
+            } else {
+                canvas.drawText(text, mXOffset, mYOffset, mTextPaintOff);
+                canvas.drawText(date, mXOffset + 30, mYOffset + 40, otherTextPaintOff);
+            }
+
         }
 
         /**
