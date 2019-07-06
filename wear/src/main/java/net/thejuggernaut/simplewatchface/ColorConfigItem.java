@@ -1,4 +1,0 @@
-package net.thejuggernaut.simplewatchface;
-
-
-
