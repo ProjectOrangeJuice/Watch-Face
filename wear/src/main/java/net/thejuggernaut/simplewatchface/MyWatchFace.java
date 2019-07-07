@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
+import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
@@ -67,6 +68,8 @@ public class MyWatchFace extends CanvasWatchFaceService {
         return new Engine();
 
     }
+
+
 
     private static class EngineHandler extends Handler {
         private final WeakReference<MyWatchFace.Engine> mWeakReference;
@@ -145,6 +148,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             mTextPaint = new Paint();
             mTextPaint.setTypeface(NORMAL_TYPEFACE);
             mTextPaint.setAntiAlias(true);
+            Log.d(TAG,"Getting stored colour.. Value is "+mSharedPref.getInt("timecolour",-1));
             mTextPaint.setColor(mSharedPref.getInt("timecolour",Color.WHITE));
 
             dateTextPaint = new Paint();
@@ -170,6 +174,12 @@ public class MyWatchFace extends CanvasWatchFaceService {
             otherTextPaintOff.setColor(
                     ContextCompat.getColor(getApplicationContext(),  R.color.white));
 
+        }
+
+        public void updateColours(){
+            mTextPaint.setColor(mSharedPref.getInt("timecolour",Color.WHITE));
+            dateTextPaint.setColor(mSharedPref.getInt("datecolour",Color.WHITE));
+            batteryTextPaint.setColor(mSharedPref.getInt("batterycolour",Color.WHITE));
         }
 
         private final BroadcastReceiver batteryWork = new BroadcastReceiver() {
@@ -221,7 +231,20 @@ public class MyWatchFace extends CanvasWatchFaceService {
 
             MyWatchFace.this.registerReceiver(batteryWork, filter1);
 
+            IntentFilter updater = new IntentFilter("UPDATED");
+            MyWatchFace.this.registerReceiver(updateIntent,updater);
+
         }
+
+        private final BroadcastReceiver updateIntent = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Log.d(TAG,"Got update request?");
+                updateColours();
+
+
+            }
+        };
 
         private void unregisterReceiver() {
             if (!mRegisteredTimeZoneReceiver) {
@@ -303,7 +326,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
                 hour = 12;
             }
             String halfText = (half == Calendar.AM) ? "AM" : "PM";
-            String text = String.format("%d:%02d %s", hour, min, halfText);
+            String text = String.format("%d:%02d", hour, min);
             String date = String.format("%s-%02d-%02d", f.format(month),
                     mCalendar.get(Calendar.MONTH), mCalendar.get(Calendar.YEAR));
            /* String text = mAmbient
@@ -313,11 +336,14 @@ public class MyWatchFace extends CanvasWatchFaceService {
                     mCalendar.get(Calendar.MINUTE));*/
             if(!mAmbient) {
                 canvas.drawText(text, mXOffset, mYOffset, mTextPaint);
+
+                canvas.drawText(halfText,mXOffset+mTextPaint.measureText(text),mYOffset,dateTextPaint);
                 canvas.drawText(date, mXOffset + 30, mYOffset + 40, dateTextPaint);
                 String battery = batteryLevel + "%";
                 canvas.drawText(battery, mXOffset + 30, mYOffset + 80, batteryTextPaint);
             } else {
                 canvas.drawText(text, mXOffset, mYOffset, mTextPaintOff);
+                canvas.drawText(halfText,mXOffset+mTextPaint.measureText(text),mYOffset,otherTextPaintOff);
                 canvas.drawText(date, mXOffset + 30, mYOffset + 40, otherTextPaintOff);
             }
 
