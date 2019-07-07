@@ -151,11 +151,13 @@ public class RecycleView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             int r = 0;
             int g = 0;
             int b = 0;
-            for(int i = 0; i < 4; i++){
-                myColours.add(Color.rgb(r,0,0));
-                myColours.add(Color.rgb(0,g,0));
-                myColours.add(Color.rgb(0,0,b));
-
+            for(int i = 0; i < 5; i++){
+              //  myColours.add(Color.rgb(r,0,0));
+            //    myColours.add(Color.rgb(0,g,0));
+               // myColours.add(Color.rgb(0,0,b));
+                if(r == 256){
+                    r = 255;
+                }
                 myColours.add(Color.rgb(r,64,0));
                 myColours.add(Color.rgb(r,128,0));
                 myColours.add(Color.rgb(r,192,0));
@@ -170,10 +172,10 @@ public class RecycleView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 myColours.add(Color.rgb(r,64,64));
                 myColours.add(Color.rgb(r,128,128));
                 myColours.add(Color.rgb(r,192,192));
-                myColours.add(Color.rgb(r,255,255));
+                myColours.add(Color.rgb(255,255,255));
 
 
-
+                Log.d(TAG,"Red value.. "+r);
                 r += 64;
                 g += 64;
                 b += 64;
