@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.wear.widget.WearableRecyclerView;
@@ -59,24 +60,30 @@ public class MySettings extends Activity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         int pickedColor;
-        switch(requestCode){
-            case TIME_COLOURS:
-                pickedColor =  ColorPickActivity.Companion.getPickedColor(data);
-                mSharedPref.edit().putInt("timecolour",pickedColor);
-                break;
+        Intent updated = new Intent("UPDATED");
+        Log.d(TAG,data.toString());
+        if (data != null) {
+            switch (requestCode) {
+                case TIME_COLOURS:
+                    pickedColor = ColorPickActivity.Companion.getPickedColor(data);
+                    mSharedPref.edit().putInt("timecolour", pickedColor).commit();
+                    sendBroadcast(updated);
+                    break;
 
-            case DATE_COLOURS:
-                pickedColor =  ColorPickActivity.Companion.getPickedColor(data);
-                mSharedPref.edit().putInt("datecolour",pickedColor);
-                break;
+                case DATE_COLOURS:
+                    pickedColor = ColorPickActivity.Companion.getPickedColor(data);
+                    mSharedPref.edit().putInt("datecolour", pickedColor).commit();
+                    sendBroadcast(updated);
+                    break;
 
-            case BATTERY_COLOURS:
-                pickedColor =  ColorPickActivity.Companion.getPickedColor(data);
-                mSharedPref.edit().putInt("batterycolour",pickedColor);
-                break;
+                case BATTERY_COLOURS:
+                    pickedColor = ColorPickActivity.Companion.getPickedColor(data);
+                    mSharedPref.edit().putInt("batterycolour", pickedColor).commit();
+                    sendBroadcast(updated);
+                    break;
+            }
+
         }
-
-
 
 
 
