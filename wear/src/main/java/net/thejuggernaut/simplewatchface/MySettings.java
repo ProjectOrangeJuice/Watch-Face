@@ -61,7 +61,7 @@ public class MySettings extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         int pickedColor;
         Intent updated = new Intent("UPDATED");
-        Log.d(TAG,data.toString());
+        //Log.d(TAG,data.toString());
         if (data != null) {
             switch (requestCode) {
                 case TIME_COLOURS:

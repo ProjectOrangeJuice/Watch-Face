@@ -44,14 +44,14 @@ public class RecycleView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 context.getSharedPreferences(
                         context.getString(R.string.settings_key),
                         Context.MODE_PRIVATE);
-        Log.d(TAG,"Finished constructor");
+        //Log.d(TAG,"Finished constructor");
     }
 
 
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        Log.d(TAG, "onCreateViewHolder(): viewType: " + viewType);
+        //Log.d(TAG, "onCreateViewHolder(): viewType: " + viewType);
 
         RecyclerView.ViewHolder viewHolder = null;
 
@@ -65,14 +65,14 @@ public class RecycleView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
         }
 
-        Log.d(TAG,"Type is.. "+viewType+" I'm giving .. "+viewHolder);
+        //Log.d(TAG,"Type is.. "+viewType+" I'm giving .. "+viewHolder);
 
         return viewHolder;
     }
 
     @Override
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        Log.d(TAG, "Element " + position + " set.");
+        //Log.d(TAG, "Element " + position + " set.");
 
         ConfigData.ConfigItemType configItemType = mSettingsDataSet.get(position);
 
@@ -145,7 +145,7 @@ public class RecycleView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             @Override
         public void onClick(View view) {
             int position = getAdapterPosition();
-            Log.d(TAG, "Complication onClick() position: " + position);
+            //Log.d(TAG, "Complication onClick() position: " + position);
 
             ArrayList<Integer> myColours = new ArrayList<>();
             int r = 0;
@@ -175,7 +175,7 @@ public class RecycleView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
                 myColours.add(Color.rgb(255,255,255));
 
 
-                Log.d(TAG,"Red value.. "+r);
+                //Log.d(TAG,"Red value.. "+r);
                 r += 64;
                 g += 64;
                 b += 64;
@@ -188,7 +188,7 @@ public class RecycleView extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
 
 
-          Log.d(TAG,"shared pref is.."+mSharedPrefResourceString);
+          //Log.d(TAG,"shared pref is.."+mSharedPrefResourceString);
             Intent intent = new ColorPickActivity.IntentBuilder()
                     .oldColor(Color.WHITE)
                     .colors(myColours)

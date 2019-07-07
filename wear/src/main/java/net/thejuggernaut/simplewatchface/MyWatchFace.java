@@ -17,7 +17,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.wearable.watchface.CanvasWatchFaceService;
 import android.support.wearable.watchface.WatchFaceStyle;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowInsets;
 
@@ -148,7 +147,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
             mTextPaint = new Paint();
             mTextPaint.setTypeface(NORMAL_TYPEFACE);
             mTextPaint.setAntiAlias(true);
-            Log.d(TAG,"Getting stored colour.. Value is "+mSharedPref.getInt("timecolour",-1));
+            //Log.d(TAG,"Getting stored colour.. Value is "+mSharedPref.getInt("timecolour",-1));
             mTextPaint.setColor(mSharedPref.getInt("timecolour",Color.WHITE));
 
             dateTextPaint = new Paint();
@@ -239,7 +238,7 @@ public class MyWatchFace extends CanvasWatchFaceService {
         private final BroadcastReceiver updateIntent = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.d(TAG,"Got update request?");
+                //Log.d(TAG,"Got update request?");
                 updateColours();
 
 
